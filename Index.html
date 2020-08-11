@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html>
 <body>
+<h1>Welcome to Qahera banking</h1>
 
-<button onclick="myFunction()">Click me</button>
-<p id="demo"></p>
+<div id="login">
+<label for="fname">User name:</label>
+  <input type="text" id="fname" name="username"><br><br>
+  <label for="lname">Password : </label>
+  <input type="password" id="lname" name="password"><br><br>
+  <button onclick="login()">Login In</button>
+</div>
+<p id="demo" style="display: none;">
+    &#163; 10,0000
+    <br><br>
+    <button onclick="myFunction()">Take me there</button>
+</p>
 
 <script>
+    function login() {
+        
+      document.getElementById("demo").style.display = "block";
+      document.getElementById("login").style.display = "none";
+    }
+
     function myFunction() {
         
         var urlParams = new URLSearchParams(window.location.search);
         window.location.href = urlParams.get('redirect_uri')+ '&authorization_code=AUTHORIZATION_CODE';
-      document.getElementById("demo").innerHTML = "Clicked";
     }
     </script>
 
