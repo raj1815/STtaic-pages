@@ -9,7 +9,7 @@
     function myFunction() {
         
         var urlParams = new URLSearchParams(window.location.search);
-        window.location.href = urlParams.get('redirect_uri');
+        window.location.href = urlParams.get('redirect_uri')+ '&authorization_code=AUTHORIZATION_CODE';
       document.getElementById("demo").innerHTML = "Clicked";
     }
     </script>
