@@ -1,15 +1,220 @@
-<!DOCTYPE html>
-<html>
-<body>
+const functions = require('firebase-functions');
+const {WebhookClient} = require('dialogflow-fulfillment');
+const {Card} = require('dialogflow-fulfillment');
+const {Image} = require('dialogflow-fulfillment');
+const {Suggestion} = require('dialogflow-fulfillment');
+const { Payload } = require("dialogflow-fulfillment");
+const { promisify } = require('util');
+let graph = require('fbgraph');
 
-<button onclick="myFunction()">Click me</button>
-<p id="demo"></p>
+const payload = {
 
-<script>
-    function myFunction() {
-      document.getElementById("demo").innerHTML = "Clicked";
+
+  "facebook": {
+    "attachment": {
+      "type":"template",
+      "payload":{
+        "template_type":"generic",
+        "elements":[
+          
+           {
+            "title":"Qahera Banking Service",
+            "image_url":"https://cdn2.vectorstock.com/i/1000x1000/22/16/cartoon-retro-bank-building-or-courthouse-with-vector-21642216.jpg",
+            "subtitle":"Get Loan Info",
+            "buttons":[
+              {
+                "type":"web_url",
+                "url":"https://www.banqueducaire.com/website/page/PersonalLoans",
+                "title":"Visit Website"
+              }           
+            ]      
+          }
+        ]
+      }
     }
-    </script>
+    }
+  };
 
-</body>
-</html>
+const loginPayload = {
+
+
+  "facebook": {
+    "attachment": {
+      "type":"template",
+      "payload":{
+        "template_type":"generic",
+        "elements":[
+          
+           {
+            "title":"Qahera Banking Service",
+            "image_url":"https://cdn2.vectorstock.com/i/1000x1000/22/16/cartoon-retro-bank-building-or-courthouse-with-vector-21642216.jpg",
+            "subtitle":"Get Login ",
+            "buttons":[
+              {
+                "type":"account_link",
+                "url":"https://raj1815.github.io/StaticPage/Index.html",
+              } ,
+              {
+         		   "type": "account_unlink"
+       		   }
+            ]      
+          }
+        ]
+      }
+    }
+    }
+  };
+
+process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
+ 
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, response) => {
+  const agent = new WebhookClient({ request, response });
+  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
+  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+ 
+  function welcome(agent) {
+    agent.add(`Welcome to Nedbank whatsapp banking service.
+1. *Latest Offers*
+2. Check *Balance*
+3. *Transaction* History
+4. *Block/Unblock* Card
+5. Remaining Todays *Payment Limit*
+6. *My Info*
+7. Nearest *ATM*
+`);
+  
+  	}
+  
+  function welcomeRich(agent){
+     agent.add(`We would love to help you. Please reach out to the nearest bank branch . Meanwhile you may read about our offerings on our bank site`);
+ agent.add(
+  new Payload(agent.FACEBOOK, payload, {rawPayload: true, sendAsMessage: true})
+);
+    
+  }
+ 
+  function fallback(agent) {
+    agent.add(`I didn't understand`);
+    agent.add(`I'm sorry, can you try again?`);
+  }
+
+  function manageCard(){
+  let cardnumber =agent.parameters['CardNumber']; 
+    if(!cardnumber){
+     agent.add(`Please provide the card number`);
+    } else {
+       agent.add(`Done`);
+    }
+ 
+
+  }
+  
+  function NearestATM(){
+     let Pincode =agent.parameters['Pincode']; 
+    if(!Pincode){
+     agent.add(`Please provide Postal Code`);
+    } else {
+       agent.add(`Banque du Caire ATM is nearest ATM based on your Input`);
+    }
+  }
+  
+  function getFacebookProfile(agent) {
+
+    const fbGraph = {
+        get: promisify(graph.get)
+      }
+         
+      graph.setAccessToken('EAAI1q6EXkFoBAKbZBO4XtOXLMP5ZCGjEcbUTow0ZBlDC2eAcumSbogN1CajHLCkvkLzdZBsqiOPXu1nzaDy46Lw0RnOhpKZBDSYZC7G0ewageZAvCX3M5ZAz7IOyfykWpI624EbH62CvPV4yrPwOeav6IjUg2NdEb5DQN21DfWN2PNs716kwUBS0Atin8PT2r3nrmgnwhS5x1gZDZD');  // <--- your facebook page token
+      graph.setVersion("3.2");
+      
+    return new Promise( (resolve, reject) => {
+      let ctx = agent.context.get('generic');
+       console.log('crx');
+      console.log(agent.originalRequest.payload.data);
+      let fbSenderID = agent.originalRequest.payload.data.sender.id;
+  
+      console.log('FACEBOOK SENDER ID: ' + fbSenderID);
+  
+      fbGraph.get( fbSenderID )
+        .then( payload => {
+          console.log('all fine: ' + payload);
+          // console.log(payload.name);
+          resolve( payload );
+        })
+        .catch( err => {
+          console.warn( err );
+          reject( err );
+        });
+    });
+  }
+
+  function checkBalanceIntent(agent) {
+           agent.add(`Please log in`);
+ agent.add(new Payload(agent.FACEBOOK, loginPayload, {rawPayload: true, sendAsMessage: true}));
+  
+  }
+  
+   function latestOffers(){
+    
+   
+     agent.add(`_Current Offers_ 
+1. Get 25% off on using Credit or Debit Card`);
+  }
+  
+  function welcomeIntent(agent){
+    
+   return getFacebookProfile(agent).then( payload => {
+    agent.add('Hello!! ' + payload.first_name + " " + payload.last_name);
+    agent.add('Welcome to Qahera Facebook Banking.');
+	agent.setFollowupEvent('mainmenu');
+  });
+  }
+
+  
+   let intentMap = new Map();
+  intentMap.set('PersonalLoan', welcomeRich);
+  intentMap.set('Default Fallback Intent', fallback);
+  intentMap.set('ManageCard', manageCard);
+  intentMap.set('NearestATM', NearestATM);
+   intentMap.set('Default Welcome Intent', welcomeIntent);
+   intentMap.set('CheckBalance', checkBalanceIntent);
+  
+  
+  
+  
+  
+  
+  agent.handleRequest(intentMap);
+  
+  // // Uncomment and edit to make your own intent handler
+  // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
+  // // below to get this function to be run when a Dialogflow intent is matched
+  // function yourFunctionHandler(agent) {
+  //   agent.add(`This message is from Dialogflow's Cloud Functions for Firebase editor!`);
+  //   agent.add(new Card({
+  //       title: `Title: this is a card title`,
+  //       imageUrl: 'https://developers.google.com/actions/images/badges/XPM_BADGING_GoogleAssistant_VER.png',
+  //       text: `This is the body text of a card.  You can even use line\n  breaks and emoji! 💁`,
+  //       buttonText: 'This is a button',
+  //       buttonUrl: 'https://assistant.google.com/'
+  //     })
+  //   );
+  //   agent.add(new Suggestion(`Quick Reply`));
+  //   agent.add(new Suggestion(`Suggestion`));
+  //   agent.setContext({ name: 'weather', lifespan: 2, parameters: { city: 'Rome' }});
+  // }
+
+  // // Uncomment and edit to make your own Google Assistant intent handler
+  // // uncomment `intentMap.set('your intent name here', googleAssistantHandler);`
+  // // below to get this function to be run when a Dialogflow intent is matched
+  // function googleAssistantHandler(agent) {
+  //   let conv = agent.conv(); // Get Actions on Google library conv instance
+  //   conv.ask('Hello from the Actions on Google client library!') // Use Actions on Google library
+  //   agent.add(conv); // Add Actions on Google library responses to your agent's response
+  // }
+  // // See https://github.com/dialogflow/fulfillment-actions-library-nodejs
+  // // for a complete Dialogflow fulfillment library Actions on Google client library v2 integration sample
+
+  // Run the proper function handler based on the matched Dialogflow intent name
+ 
+});

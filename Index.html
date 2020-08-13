@@ -1,34 +1,59 @@
 <!DOCTYPE html>
 <html>
-<body>
-<h1>Welcome to Qahera banking</h1>
 
-<div id="login">
-<label for="fname">User name:</label>
-  <input type="text" id="fname" name="username"><br><br>
-  <label for="lname">Password : </label>
-  <input type="password" id="lname" name="password"><br><br>
-  <button onclick="login()">Login In</button>
-</div>
-<p id="demo" style="display: none;">
+<head>
+  <link href="layout.css" rel="stylesheet">
+</head>
+
+<body>
+  <h1 class="heading">Welcome to Qahera banking</h1>
+
+  <div id="login">
+    <div class="wrapper">
+      <div id="formContent">
+        <!-- Tabs Titles -->
+
+        <!-- Icon -->
+        <div>
+          <h1>Log In</h1>
+        </div>
+
+        <!-- Login Form -->
+        <input type="text" id="login" class="second" name="login" placeholder="login">
+        <input type="password" id="password" class="third" name="login" placeholder="password">
+        <button class="submit" onclick="login()">Log In</button>
+        <!-- Remind Passowrd -->
+        <div id="formFooter">
+          <a class="underlineHover" href="#">Forgot Password?</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div id="demo" class="wrapper" style="display: none;">
+    <div id="formContent">
+      <h1 class="account-name">Hello!! Vikrant</h1>
+      <p>Account XXXXXXXX 4521 of Account Type <strong>CURRENT </strong> having balance</p>
     &#163; 10,0000
     <br><br>
-    <button onclick="myFunction()">Take me there</button>
-</p>
+    <button onclick="myFunction()">Back to chat</button>
+  </div>
+  </div>
 
-<script>
+  <script>
     function login() {
-        
-      document.getElementById("demo").style.display = "block";
+
+      document.getElementById("demo").style.display = "flex";
       document.getElementById("login").style.display = "none";
     }
 
     function myFunction() {
-        
-        var urlParams = new URLSearchParams(window.location.search);
-        window.location.href = urlParams.get('redirect_uri')+ '&authorization_code=AUTHORIZATION_CODE';
+
+      var urlParams = new URLSearchParams(window.location.search);
+      window.location.href = urlParams.get('redirect_uri') + '&authorization_code=AUTHORIZATION_CODE';
     }
-    </script>
+  </script>
 
 </body>
+
 </html>
